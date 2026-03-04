@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长川遗韵 - 内蒙古非遗数字图谱</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-paper: #f7f9f4; /* 配合背景图的浅青白底色 */
+            --ink: #2b3a42;      /* 深墨绿灰，比纯黑更雅致 */
+            --accent: #8e2b2b;   /* 朱砂红，用于强调 */
+            
+            /* 类别颜色 */
+            --c-lit: #8e44ad; --c-music: #2980b9; --c-dance: #d35400; 
+            --c-drama: #c0392b; --c-quyi: #f39c12; --c-sport: #27ae60; 
+            --c-art: #e74c3c; --c-craft: #a04000; --c-med: #16a085; --c-folk: #2c3e50;
+
+            /* 民族颜色 */
+            --e-mongol: #c0392b; --e-han: #d35400; --e-ewenki: #27ae60; 
+            --e-daur: #f39c12; --e-oroqen: #8e44ad; --e-russian: #2980b9;
+            --e-multi: #7f8c8d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ====== 1. 背景与全局设置 ====== */
+        body {
+            font-family: 'Noto Serif SC', serif;
+            
+            /* 【修改这里】确保括号里的名字和您的图片文件名一模一样！包含后缀！ */
+            background: url('bg.jpg.jpg') no-repeat center center fixed;
+            
+            background-size: cover;
+            background-color: var(--bg-paper); 
+            color: var(--ink);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 遮罩层：因为背景图本身很淡雅，我们只需要极淡的遮罩，稍微统一色调即可 */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            /* 极淡的青白色遮罩，保留背景的纹理和花卉细节 */
+            background: rgba(245, 250, 245, 0.4); 
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* ====== 2. 导航栏与艺术字 ====== */
+        .navbar {
+            height: 80px; /* 稍微加高一点以容纳艺术字 */
+            background: rgba(255, 255, 255, 0.6); /* 更通透的磨砂玻璃 */
+            border-bottom: 1px solid rgba(43, 58, 66, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 60px;
+            padding: 0 40px;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+
+        /* 左上角艺术字容器 */
+        .nav-logo {
+            position: absolute;
+            left: 30px;
+            display: flex;
+            flex-direction: column; /* 或者是 row，看您喜欢 */
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        /* "长川遗韵" */
+        .logo-main {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 2.2rem;
+            color: #2c3e50; /* 深青墨色 */
+            line-height: 1;
+            text-shadow: 2px 2px 0px rgba(255,255,255,0.8);
+            letter-spacing: 2px;
+        }
+
+        /* "寸指传薪" */
+        .logo-sub {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 1.1rem;
+            color: var(--accent); /* 朱红色印章感 */
+            margin-top: 2px;
+            margin-left: 4px;
+            letter-spacing: 4px;
+            opacity: 0.9;
+        }
+
+        .view-switcher { display: flex; gap: 20px; }
+
+        .view-btn {
+            font-family: 'Ma Shan Zheng';
+            font-size: 1.3rem;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            color: #555;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .view-btn.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
+        .view-btn:hover { color: var(--accent); }
+
+        /* ====== 3. 主舞台 ====== */
+        .main-stage {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- 视图1：转盘 --- */
+        .wheel-container {
+            width: 860px; height: 860px;
+            position: absolute;
+            border-radius: 50%;
+            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s;
+            opacity: 1;
+            transform: scale(1);
+            /* 极淡的圆形光晕，区分复杂的背景 */
+            background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 65%);
+        }
+        .wheel-container.hidden { opacity: 0; pointer-events: none; transform: scale(0.8); }
+
+        .orbit-ring {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            border: 1px dashed rgba(43, 58, 66, 0.2); /* 虚线颜色加深 */
+            border-radius: 50%; pointer-events: none;
+        }
+        .orbit-label {
+            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+            font-family: 'Ma Shan Zheng'; font-size: 1rem; color: var(--accent);
+            text-shadow: 0 0 5px #fff; font-weight: bold;
+        }
+
+        .center-island {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 130px; height: 130px;
+            background: #fff;
+            border-radius: 50%;
+            border: 3px double var(--accent);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 20; box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+            cursor: pointer; transition: all 0.3s;
+        }
+        .center-island:hover { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 8px 30px rgba(142, 43, 43, 0.3); }
+        .center-title { font-family: 'Ma Shan Zheng'; font-size: 1.8rem; text-align: center; line-height: 1.1; color: var(--accent); }
+        .center-subtitle { font-size: 0.7rem; color: #666; margin-top: 4px; }
+
+        .sector-node {
+            position: absolute; transform: translate(-50%, -50%);
+            display: flex; flex-direction: column; align-items: center;
+            cursor: pointer; width: 60px; z-index: 10;
+        }
+        .sector-node:hover .sector-icon { transform: scale(1.2); box-shadow: 0 0 10px rgba(0,0,0,0.2); }
+        .sector-icon {
+            width: 36px; height: 36px; border-radius: 50%; color: #fff;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: bold; font-size: 0.9rem; border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.3s;
+        }
+        .sector-label { margin-top: 5px; font-size: 0.8rem; font-weight: bold; text-shadow: 0 0 3px #fff; white-space: nowrap; color: #333; }
+
+        .item-node {
+            position: absolute; width: 38px; height: 38px; border-radius: 50%;
+            background-color: #e0e0e0; background-size: cover; background-position: center;
+            cursor: pointer; transform: translate(-50%, -50%);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 5; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .item-node:hover { transform: translate(-50%, -50%) scale(2.8); z-index: 100; border-color: var(--accent) !important; }
+        .item-node.has-3d::after { content: ''; position: absolute; top:-4px; left:-4px; right:-4px; bottom:-4px; border-radius: 50%; border: 2px solid gold; animation: ripple 1.5s infinite; }
+        @keyframes ripple { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+        .tooltip { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10px; opacity: 0; pointer-events: none; white-space: nowrap; }
+        .item-node:hover .tooltip { opacity: 1; bottom: -28px; }
+
+
+        /* --- 视图2：传承脉络 (长卷风格) --- */
+        .timeline-container {
+            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0;
+            overflow-y: auto; padding: 0;
+            opacity: 0; pointer-events: none; transition: opacity 0.5s;
+            display: flex; justify-content: center; align-items: flex-start;
+        }
+        .timeline-container.active { opacity: 1; pointer-events: auto; }
+
+        .timeline-wrapper {
+            position: relative; width: 800px;
+            min-height: 100%; /* 确保铺满全屏 */
+            padding-top: 80px; padding-bottom: 120px;
+            background: rgba(255, 255, 255, 0.7); /* 半透明白色，透出背景 */
+            border-left: 1px solid rgba(255,255,255,0.5);
+            border-right: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 0 30px rgba(0,0,0,0.05);
+        }
+        .timeline-line {
+            position: absolute; left: 50%; top: 0; bottom: 0; width: 4px;
+            background: url('data:image/svg+xml;utf8,<svg width="4" height="10" viewBox="0 0 4 10" xmlns="http://www.w3.org/2000/svg"><rect width="4" height="6" fill="%23c0392b" opacity="0.6"/></svg>') repeat-y;
+            transform: translateX(-2px); z-index: 0;
+        }
+        .timeline-item { position: relative; margin: 50px 0; width: 50%; padding: 0 40px; box-sizing: border-box; z-index: 1; }
+        .timeline-item:nth-child(odd) { left: 0; text-align: right; }
+        .timeline-item:nth-child(even) { left: 50%; text-align: left; }
+        .timeline-dot {
+            position: absolute; top: 20px; width: 20px; height: 20px;
+            background: #fff; border: 4px solid var(--accent); border-radius: 50%;
+            z-index: 10; transition: transform 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .timeline-item:nth-child(odd) .timeline-dot { right: -10px; }
+        .timeline-item:nth-child(even) .timeline-dot { left: -10px; }
+        .timeline-item:hover .timeline-dot { transform: scale(1.5); background: var(--accent); }
+        .timeline-content {
+            background: rgba(255,255,255,0.95); padding: 25px;
+            border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid var(--accent); transition: transform 0.3s; cursor: pointer;
+        }
+        .timeline-item:nth-child(even) .timeline-content { border-left: none; border-right: 5px solid var(--accent); }
+        .timeline-item:hover .timeline-content { transform: translateY(-5px); background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+
+        .t-time { font-family: 'Ma Shan Zheng'; font-size: 1.4rem; color: var(--accent); margin-bottom: 5px; }
+        .t-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; color: #2b3a42; }
+        .t-desc { font-size: 0.9rem; color: #555; line-height: 1.6; }
+
+
+        /* --- 弹窗与覆盖层 --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center; z-index: 200;
+        }
+        .modal.open { display: flex; animation: slideUp 0.4s ease; }
+        .modal-card {
+            width: 700px; height: 450px; background: #fff;
+            display: flex; border-radius: 4px; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+        }
+        .m-img { width: 40%; background: #eee center/cover; }
+        .m-info { width: 60%; padding: 40px; display: flex; flex-direction: column; justify-content: center; position: relative; }
+        .m-close { position: absolute; top: 15px; right: 20px; font-size: 30px; cursor: pointer; color: #999; }
+        .badge { display: inline-block; padding: 3px 8px; color: white; border-radius: 4px; font-size: 12px; margin-right: 5px; margin-bottom: 15px;}
+        .jump-btn {
+            margin-top: auto; padding: 10px 20px; background: var(--accent); color: white; border: none;
+            font-family: 'Ma Shan Zheng'; font-size: 1.2rem; cursor: pointer; align-self: flex-start;
+            transition: transform 0.2s; box-shadow: 0 4px 10px rgba(142, 43, 43, 0.3);
+        }
+        .jump-btn:hover { transform: scale(1.05); }
+
+        .scene-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 300; display: none; flex-direction: column;
+        }
+        .scene-overlay.active { display: flex; animation: fadeIn 0.5s ease; }
+        .scene-back-btn {
+            position: absolute; top: 20px; left: 20px;
+            padding: 10px 25px; background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--accent); border-radius: 30px;
+            cursor: pointer; font-family: 'Ma Shan Zheng'; font-size: 1.2rem; color: var(--accent);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 310;
+            display: flex; align-items: center; gap: 8px; transition: all 0.3s;
+        }
+        .scene-back-btn:hover { background: var(--accent); color: white; box-shadow: 0 6px 20px rgba(169, 50, 38, 0.4); }
+        .scene-iframe { flex: 1; width: 100%; height: 100%; border: none; background: #111; }
+
+        @keyframes slideUp { from {opacity:0; transform:translateY(30px);} to {opacity:1; transform:translateY(0);} }
+        @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <!-- 修改：左上角艺术字 -->
+        <div class="nav-logo" onclick="location.reload()">
+            <span class="logo-main">长川遗韵</span>
+            <span class="logo-sub">· 寸指传薪</span>
+        </div>
+
+        <div class="view-switcher">
+            <div class="view-btn active" onclick="switchView('category')" id="btn-cat">申报类别</div>
+            <div class="view-btn" onclick="switchView('region')" id="btn-reg">申报地区</div>
+            <div class="view-btn" onclick="switchView('ethnic')" id="btn-eth">传承民族</div>
+            <div class="view-btn" onclick="switchView('lineage')" id="btn-lin">传承脉络</div>
+        </div>
+    </nav>
+
+    <div class="main-stage">
+        <!-- 视图容器：转盘 -->
+        <div class="wheel-container" id="wheelView">
+            <div class="center-island" onclick="resetFilter()">
+                <div class="center-title" id="centerText">非遗<br>图谱</div>
+                <div class="center-subtitle">点击重置</div>
+            </div>
+            <!-- JS生成内容 -->
+        </div>
+
+        <!-- 视图容器：传承脉络 (时间轴) -->
+        <div class="timeline-container" id="timelineView">
+            <div class="timeline-wrapper" id="timelineContent">
+                <div class="timeline-line"></div>
+                <!-- JS生成时间轴节点 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <div class="modal" id="modal">
+        <div class="modal-card">
+            <div class="m-img" id="mImg"></div>
+            <div class="m-info">
+                <div class="m-close" onclick="closeModal()">×</div>
+                <h2 id="mName" style="font-family:'Ma Shan Zheng';font-size:2.4rem;margin-bottom:10px;">标题</h2>
+                <div id="mTags"></div>
+                <p id="mDesc" style="line-height:1.6;color:#555;">描述内容...</p>
+                <button class="jump-btn" id="mJump" style="display:none">进入交互场景 &rarr;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 粒子场景覆盖层 (包含返回按钮) -->
+    <div class="scene-overlay" id="sceneOverlay">
+        <div class="scene-back-btn" onclick="closeScene()">
+            <span>&larr;</span> 返回图谱
+        </div>
+        <iframe id="sceneFrame" class="scene-iframe" src=""></iframe>
+    </div>
+
+    <script>
+        // ================= 1. 数据准备 =================
+        
+        // --- 传承脉络数据 (根据《传统项目发展脉络表》完整录入) ---
+        const lineageData = [
+            // === 远古时期 ===
+            { t: "远古时期", n: "口簧 (口弦琴)", d: "新石器时代已有考古发现，清代列为宫廷乐器，是古老的泛世界乐器。" },
+            { t: "远古时期", n: "蒙古族长调民歌", d: "起源于草原游牧生活，元代成为宫廷礼仪一部分，清代广泛流传，2005年入选人类非遗。" },
+            { t: "远古时期", n: "蒙古族呼麦", d: "古代狩猎时模仿自然的喉音艺术，元代有记载，20世纪未经挖掘走向世界。" },
+            { t: "远古时期", n: "蒙古族搏克", d: "可追溯至匈奴数，元代用于军队训练，清代形成完整体系，是那达慕核心。" },
+            { t: "远古时期", n: "皮艺 (蒙古族皮艺)", d: "起源于游牧生活的皮具制作，元、清时期因军备和宫廷需求技艺精进。" },
+            { t: "远古时期", n: "蒙古族勒勒车制作技艺", d: "适应草原运输的古老发明，制造传统延续数千年，被誉为“草原之舟”。" },
+            { t: "远古时期", n: "弓箭制作技艺 (蒙古族牛角弓)", d: "最早可追溯至匈奴时期，元代因军事达顶峰，明清后主要用于那达慕竞技。" },
+            { t: "远古时期", n: "蒙古族马具制作技艺", d: "春秋战国出现马具雏形，元代功能完备，清代装饰华丽并与礼仪结合。" },
+            { t: "远古时期", n: "桦树皮制作技艺", d: "北方森林狩猎民族适应环境的古老技艺，纹饰具原始宗教色彩。" },
+            { t: "远古时期", n: "鄂伦春族狍皮制作技艺", d: "源于森林狩猎生存智慧，形成一整套从鞣制到成衣的技艺。" },
+            { t: "远古时期", n: "蒙医药 (蒙医乌拉灸术)", d: "蒙医最古老疗法之一，源于北方民族灸熨经验，清代与佛教医学结合后更规范。" },
+            { t: "远古时期", n: "蒙医药 (蒙医传统正骨术)", d: "起源于古代骑兵伤科实践，《蒙古秘史》有记载，清代经名医系统理论化。" },
+            { t: "远古时期", n: "达斡尔族鲁日格勒舞", d: "起源于达斡尔族狩猎生活，围绕篝火的集体舞蹈。" },
+            { t: "远古时期", n: "蒙古族服饰", d: "为适应游牧生活形成的基本形制自古有之，元、清两代在面料、纹饰上极大丰富。" },
+            { t: "远古时期", n: "祭敖包", d: "源于远古的自然崇拜和祖先祭祀，后与藏传佛教仪式融合，清代规范化。" },
+            { t: "远古时期", n: "鄂温克驯鹿习俗", d: "与鄂温克族（使鹿部）生计方式共生，是其森林文化的核心。" },
+            { t: "远古时期", n: "蒙古族养驼习俗", d: "在戈壁草原形成的一套关于骆驼选育、放牧、利用的完整知识与文化。" },
+
+            // === 秦汉时期 ===
+            { t: "秦汉时期", n: "蒙古包营造技艺", d: "起源于匈奴的“穹庐”，元代形制标准化，清代技艺完全成熟。" },
+            { t: "秦汉时期", n: "冒顿潮尔 (胡笳)", d: "产生于秦汉，唐代流行，清代后濒危，20世纪末重新挖掘。" },
+
+            // === 元代 ===
+            { t: "元代", n: "格萨(斯)尔", d: "史诗随藏传佛教传入蒙古地区并本土化，清代已有抄本。" },
+            { t: "元代", n: "蒙古族四胡音乐", d: "前身为契丹奚琴，元代流传，清代用于宫廷，近现代成为乌力格尔、好来宝的主要伴奏。" },
+            { t: "元代", n: "潮尔道 (蒙古族合声演唱)", d: "起源于蒙元时期，明末清初达鼎盛，用于宫廷、寺庙等庄严场合。" },
+            { t: "元代", n: "阿斯尔 (蒙古族宫廷器乐)", d: "起源于成吉思汗时期，元代成为宫廷宴乐，清代在察哈尔流行后传入民间。" },
+            { t: "元代", n: "鄂尔多斯短调民歌", d: "风格形成可上溯到元代，在鄂尔多斯蒙汉杂居区融合形成，节奏明快。" },
+            { t: "元代", n: "鄂尔多斯古如歌", d: "起源于蒙古汗国宫廷歌曲，清代后在鄂尔多斯杭锦旗传承，被称为“蒙古音乐活化石”。" },
+            { t: "元代", n: "蒙古文书法", d: "随回鹘式蒙古文使用而出现，元代用于官方文书，清代在寺院书写中达艺术高峰。" },
+            { t: "元代", n: "毛绣 (察哈尔毛绣)", d: "起源于蒙古族古老的毡绣装饰，在察哈尔地区为宫廷和寺院服务中形成特色。" },
+            { t: "元代", n: "奶制品制作技艺 (察干伊德)", d: "元代设有专供宫廷的奶食基地，清代由察哈尔部潜精制并进贡，形成完整技艺与礼仪。" },
+            { t: "元代", n: "牛羊肉烹制技艺 (烤全羊)", d: "作为元代宫廷“诈马宴”核心菜肴载入史册，后在王府、寺庙及重大节庆中传承。" },
+            { t: "元代", n: "银铜器制作及錾金工艺", d: "元代吸收欧亚金属工艺，清代因佛教法器和贵族需求繁荣，形成錾刻、鎏金等特色。" },
+            { t: "元代", n: "民族乐器制作技艺", d: "伴随马头琴、四胡等乐器定型，制作技艺在元、清逐步专业化。" },
+            { t: "元代", n: "那达慕", d: "源于蒙古汗国检阅部队、缔结联盟的“大聚会”，清代在盟旗制度下定期举行并定型。" },
+            { t: "元代", n: "成吉思汗祭典", d: "始于元代对成吉思汗的缅怀祭祀，明代由专职“达尔扈特”人守护规范，清代形成严格制度。" },
+
+            // === 北元与明代 ===
+            { t: "北元时期", n: "科尔沁叙事民歌", d: "产生于北元，兴盛于清末至民国，记录草原历史变迁，20世纪50年代被系统采集。" },
+            { t: "明代", n: "古如查玛", d: "随藏传佛教格鲁派传入的宗教舞蹈，已有400多年历史。" },
+            { t: "明代", n: "好来宝", d: "起源于12世纪前后，元代已有记载，清代在科尔沁地区盛行。" },
+            { t: "明末清初", n: "乌力格尔", d: "约形成于明末清初，在科尔沁地区职业艺人中流传，约有400年历史。" },
+
+            // === 清代 ===
+            { t: "清代", n: "巴拉根仓的故事", d: "科尔沁地区的机智人物故事，在清代通过幽默讽刺反映社会现实，口耳相传。" },
+            { t: "清代", n: "爬山调", d: "清代随“走西口”移民传入内蒙古西部，融合蒙汉音乐元素形成的山歌。" },
+            { t: "清代", n: "漫瀚调", d: "清代在鄂尔多斯准格尔旗蒙汉杂居区产生，融合蒙古短调与晋陕民歌。" },
+            { t: "清代", n: "达斡尔扎恩达勒", d: "达斡尔族在山野劳动中即兴吟唱的山歌，清代已有记载，20世纪后逐渐定型。" },
+            { t: "清代", n: "二人台牌子曲", d: "清咸丰年间出现，融合内地民歌、戏曲曲牌和蒙古民歌，形成于内蒙古西部移民社会。" },
+            { t: "清代", n: "安代舞", d: "原为科尔沁萨满治病的仪式舞蹈，20世纪50年代经改编成为群众性民间舞蹈。" },
+            { t: "清代", n: "脑阁", d: "清代从晋北传入土默特地区，用于迎接康熙皇帝庆典，后成为节庆社火活动。" },
+            { t: "清代", n: "查玛", d: "随藏传佛教传入内蒙古的寺庙“跳神”舞蹈，清代在寺庙普及。" },
+            { t: "清代", n: "东北二人转 (内蒙古)", d: "起源于辽宁，清代传入内蒙古东部，已有近300年历史。" },
+            { t: "清代", n: "达斡尔乌春 (乌钦)", d: "起源于清代文人用满文创作的叙事诗，后发展为口头说唱艺术。" },
+            { t: "清代", n: "剪纸 (和林格尔剪纸)", d: "随“走西口”移民传入，与蒙古族图案艺术融合，形成农牧结合的风格。" },
+            { t: "清代", n: "剪纸 (包头剪纸)", d: "在蒙汉杂居的移民社会中形成，融合河北、山西技法与蒙古族审美。" },
+            { t: "清代", n: "蒙古族刺绣 (图什业图刺绣)", d: "随清代科尔沁图什业图亲王府设立而兴起，服务于王府，绣品精绝华丽。" },
+            { t: "清代", n: "蒙古族唐卡 (马鬃绕线堆绣唐卡)", d: "随藏传佛教深入传播而产生，融合蒙古族马鬃绕线技艺与藏唐卡艺术。" },
+            { t: "清代", n: "地毯织造技艺 (阿拉善地毯)", d: "清代随阿拉善和额济纳特部建立而兴起，受北京宫廷和西域艺术影响，形成独特风格。" },
+            { t: "清代", n: "蒙医药 (赞巴拉道尔吉温针、火针)", d: "由18世纪医学家赞巴拉道尔吉系统化，是蒙医外疗法的精髓。" },
+            { t: "清代", n: "中医传统制剂方法 (鸿茅药酒)", d: "清乾隆年间由山西郎中创制，融合中医方剂与蒙古族饮酒习俗，行销全国。" },
+            { t: "清代", n: "蒙医药 (科尔沁蒙医药浴疗法)", d: "在藏医药理论基础上，结合科尔沁地区药材资源与民间疗法形成的特色外治法。" },
+            { t: "清代", n: "蒙古族婚礼 (各类型)", d: "在元代前后基本定型，清代以来因地域差异发展出乌珠穆沁、鄂尔多斯等各具特色的婚礼类型。" },
+            { t: "清代", n: "民间信俗 (如六十棵榆树祭等)", d: "大多在清代因部落迁徙、朝廷封赐等具体历史事件而固定化、地方化。" },
+            { t: "清代", n: "抬阁 (脑阁)", d: "清康熙年间为迎接皇帝巡幸由晋北传入，后成为当地节庆重要活动。" },
+            { t: "清末", n: "皮影戏 (巴林左旗)", d: "清光绪年间随河北滦州皮影传入，融合蒙古族民歌、东北小调。" },
+
+            // === 20世纪及近代 ===
+            { t: "20世纪初", n: "嘎达梅林", d: "以20世纪30年代英雄事迹编成的长篇叙事民歌，1930年代开始传唱，1950年代被整理出版。" },
+            { t: "20世纪初", n: "东路二人台", d: "形成于民国初年，20世纪50年代始称“东路二人台”。" },
+            { t: "20世纪初", n: "俄罗斯族民间舞蹈", d: "19世纪末20世纪初随俄罗斯移民传入，保留俄罗斯民间舞蹈风格。" },
+            { t: "20世纪", n: "石雕 (巴林石雕)", d: "艺术化发展依托于民国开采的巴林石规模开采，近几十年形成地方雕刻流派。" },
+            { t: "20世纪", n: "俄罗斯族巴斯克节", d: "随俄罗斯族移民传入，成为内蒙古多元文化的一部分。" }
+        ];
+
+        let rawData = [
+            // 民间文学
+            {n:"格萨(斯)尔",y:2006,r:"内蒙古自治区",c:"民间文学",e:"X"},
+            {n:"格萨(斯)尔",y:2014,r:"赤峰",c:"民间文学",e:"X"},
+            {n:"祝赞词",y:2011,r:"锡林郭勒",c:"民间文学",e:"M"},
+            {n:"江格尔",y:2021,r:"内蒙古自治区",c:"民间文学",e:"M"},
+            {n:"科尔沁潮尔史诗",y:2008,r:"内蒙古自治区",c:"民间文学",e:"M"},
+            {n:"嘎达梅林",y:2008,r:"通辽",c:"民间文学",e:"M"},
+            {n:"巴拉根仓的故事",y:2008,r:"通辽",c:"民间文学",e:"M"},
+            {n:"鄂温克族民间故事",y:2021,r:"呼伦贝尔",c:"民间文学",e:"E"}, // 鄂温克
+            
+            // 传统音乐
+            {n:"蒙古族长调民歌",y:2006,r:"内蒙古自治区",c:"传统音乐",e:"M"},
+            {n:"蒙古族呼麦",y:2006,r:"内蒙古自治区",c:"传统音乐",e:"M"},
+            {n:"蒙古族马头琴音乐",y:2006,r:"内蒙古自治区",c:"传统音乐",e:"M"},
+            {n:"蒙古族长调民歌（乌珠穆沁长调）",y:2021,r:"锡林郭勒",c:"传统音乐",e:"M"},
+            {n:"蒙古族长调民歌（巴尔虎长调）",y:2014,r:"呼伦贝尔",c:"传统音乐",e:"M"},
+            {n:"多声部民歌（潮尔道-阿巴嘎潮尔）",y:2008,r:"锡林郭勒",c:"传统音乐",e:"M"},
+            {n:"多声部民歌（潮尔道-蒙古族合声演唱）",y:2008,r:"锡林浩特市",c:"传统音乐",e:"M"},
+            {n:"蒙古族四胡音乐",y:2006,r:"通辽",c:"传统音乐",e:"M"}, 
+            {n:"蒙古族四胡音乐",y:2014,r:"通辽",c:"传统音乐",e:"M"}, 
+            {n:"蒙古族民歌（科尔沁叙事民歌）",y:2008,r:"通辽",c:"传统音乐",e:"M"}, 
+            {n:"潮尔（蒙古族弓弦乐）",y:2014,r:"通辽",c:"传统音乐",e:"M"},
+            {n:"蒙古族汗廷音乐",y:2014,r:"赤峰",c:"传统音乐",e:"M"},
+            {n:"爬山调",y:2008,r:"巴彦淖尔",c:"传统音乐",e:"H"}, // 汉族
+            {n:"爬山调",y:2008,r:"呼和浩特",c:"传统音乐",e:"H"}, // 汉族
+            {n:"漫瀚调",y:2008,r:"鄂尔多斯",c:"传统音乐",e:"X"}, // 多民族/汉蒙融合
+            {n:"蒙古族民歌（乌拉特民歌）",y:2011,r:"巴彦淖尔",c:"传统音乐",e:"M"}, 
+            {n:"蒙古族民歌（鄂尔多斯古如歌）",y:2008,r:"鄂尔多斯",c:"传统音乐",e:"M"}, 
+            {n:"蒙古族民歌（和硕特民歌）",y:2021,r:"阿拉善",c:"传统音乐",e:"M"}, 
+            {n:"蒙古族民歌（鄂尔多斯短调民歌）",y:2008,r:"鄂尔多斯",c:"传统音乐",e:"M"}, 
+            {n:"鄂温克族民歌（鄂温克叙事民歌）",y:2008,r:"呼伦贝尔",c:"传统音乐",e:"E"}, // 鄂温克
+            {n:"鄂伦春族民歌（鄂伦春族赞达仁）",y:2008,r:"呼伦贝尔",c:"传统音乐",e:"O"}, // 鄂伦春
+            {n:"达斡尔族民歌（达斡尔扎恩达勒）",y:2008,r:"呼伦贝尔",c:"传统音乐",e:"D"}, // 达斡尔
+            {n:"阿斯尔",y:2014,r:"锡林郭勒",c:"传统音乐",e:"M"},
+
+            // 传统舞蹈
+            {n:"蒙古族安代舞",y:2006,r:"通辽",c:"传统舞蹈",e:"M"},
+            {n:"达斡尔族鲁日格勒舞",y:2006,r:"呼伦贝尔",c:"传统舞蹈",e:"D"}, // 达斡尔
+            {n:"鄂温克族萨满舞",y:2011,r:"呼伦贝尔",c:"传统舞蹈",e:"E"},
+            {n:"查玛",y:2008,r:"阿拉善",c:"传统舞蹈",e:"M"},
+            {n:"萨吾尔登",y:2011,r:"阿拉善",c:"传统舞蹈",e:"M"},
+
+            // 传统戏剧
+            {n:"二人台",y:2006,r:"呼和浩特",c:"传统戏剧",e:"H"}, // 汉族
+            {n:"二人台",y:2021,r:"包头",c:"传统戏剧",e:"H"}, // 汉族
+            {n:"二人台（东路二人台）",y:2011,r:"乌兰察布",c:"传统戏剧",e:"H"}, // 汉族
+            {n:"皮影戏",y:2011,r:"赤峰",c:"传统戏剧",e:"H"}, // 这里的皮影戏指宁城/巴林皮影，含蒙元素
+            {n:"晋剧",y:2011,r:"呼和浩特",c:"传统戏剧",e:"H"}, // 汉族
+
+            // 曲艺
+            {n:"乌力格尔",y:2006,r:"通辽",c:"曲艺",e:"M"},
+            {n:"乌力格尔",y:2008,r:"通辽",c:"曲艺",e:"M"},
+            {n:"乌力格尔",y:2006,r:"兴安盟",c:"曲艺",e:"M"},
+            {n:"好来宝",y:2008,r:"通辽",c:"曲艺",e:"M"},
+            {n:"东北二人转",y:2008,r:"通辽",c:"曲艺",e:"H"}, // 汉族
+            {n:"达斡尔族乌钦",y:2008,r:"呼伦贝尔",c:"曲艺",e:"D"}, // 达斡尔
+
+            // 传统体育、游艺与杂技
+            {n:"蒙古族搏克",y:2006,r:"锡林郭勒",c:"传统体育、游艺与杂技",e:"M"},
+            {n:"蒙古族搏克",y:2014,r:"内蒙古自治区",c:"传统体育、游艺与杂技",e:"M"},
+            {n:"蒙古族象棋",y:2008,r:"阿拉善",c:"传统体育、游艺与杂技",e:"M"},
+            {n:"沙力博尔式摔跤",y:2008,r:"阿拉善",c:"传统体育、游艺与杂技",e:"M"},
+            {n:"乌审走马竞技",y:2021,r:"鄂尔多斯",c:"传统体育、游艺与杂技",e:"M"},
+            {n:"蒙古族驼球",y:2014,r:"巴彦淖尔",c:"传统体育、游艺与杂技",e:"M"},
+            {n:"达斡尔族传统曲棍球",y:2006,r:"呼伦贝尔",c:"传统体育、游艺与杂技",e:"D"}, // 达斡尔
+            {n:"布鲁",y:2014,r:"通辽",c:"传统体育、游艺与杂技",e:"M"},
+            {n:"鄂温克抢枢",y:2008,r:"呼伦贝尔",c:"传统体育、游艺与杂技",e:"E"}, // 鄂温克
+
+            // 传统美术
+            {n:"蒙古族刺绣",y:2014,r:"锡林郭勒",c:"传统美术",e:"M"},
+            {n:"蒙古文书法",y:2014,r:"内蒙古自治区",c:"传统美术",e:"M"},
+            {n:"皮艺（蒙古族皮艺）",y:2014,r:"呼和浩特",c:"传统美术",e:"M"},
+            {n:"剪纸(和林格尔)",y:2008,r:"呼和浩特",c:"传统美术",e:"H"}, // 汉族
+            {n:"剪纸(包头)",y:2011,r:"包头",c:"传统美术",e:"H"}, // 汉族
+            {n:"石雕（巴林石雕）",y:2021,r:"赤峰",c:"传统美术",e:"H"}, // 汉族
+            {n:"蒙古族刺绣（图什业图刺绣）",y:2021,r:"兴安盟",c:"传统美术",e:"M"},
+            {n:"蒙古族唐卡（马鬃绕线堆绣唐卡）",y:2021,r:"阿拉善",c:"传统美术",e:"M"},
+            {n:"毛绣（察哈尔毛绣）",y:2021,r:"乌兰察布",c:"传统美术",e:"M"},
+
+            // 传统技艺
+            {n:"蒙古族勒勒车制作",y:2006,r:"锡林郭勒",c:"传统技艺",e:"M"},
+            {n:"弓箭制作技艺（蒙古族牛角弓制作技艺）",y:2011,r:"内蒙古自治区（内蒙古师范大学）",c:"传统技艺",e:"M"},
+            {n:"蒙古包营造技艺",y:2008,r:"内蒙古自治区（文学艺术界联合会）",c:"传统技艺",e:"M"},
+            {n:"蒙古包营造技艺",y:2008,r:"呼伦贝尔",c:"传统技艺",e:"M"},
+            {n:"蒙古包营造技艺",y:2008,r:"锡林郭勒",c:"传统技艺",e:"M"},
+            {n:"奶制品制作技艺（察干伊德）",y:2014,r:"锡林郭勒",c:"传统技艺",e:"M"},
+            {n:"桦树皮制作技艺",y:2006,r:"呼伦贝尔",c:"传统技艺",e:"X"}, // 鄂伦春
+            {n:"桦树皮制作技艺（鄂温克族桦树皮制作技艺）",y:2008,r:"呼伦贝尔",c:"传统技艺",e:"E"}, // 鄂温克
+            {n:"鄂伦春族狍皮制作技艺",y:2008,r:"呼伦贝尔",c:"传统技艺",e:"O"}, // 鄂伦春
+            {n:"银铜器制作及鎏金技艺（乌拉特铜银器制作技艺）",y:2021,r:"巴彦淖尔",c:"传统技艺",e:"M"}, 
+            {n:"地毯织造技艺（阿拉善地毯织造技艺）",y:2021,r:"阿拉善",c:"传统技艺",e:"M"},
+            {n:"牛羊肉烹制技艺（烤全羊技艺）",y:2008,r:"阿拉善",c:"传统技艺",e:"M"},
+            {n:"蒙古族勒勒车制作",y:2008,r:"通辽",c:"传统技艺",e:"M"},
+            {n:"蒙古族马具制作技艺",y:2008,r:"通辽",c:"传统技艺",e:"M"},
+            {n:"民族乐器制作技艺（蒙古族拉弦乐器制作技艺）",y:2011,r:"通辽",c:"传统技艺",e:"M"},
+
+            // 传统医药
+            {n:"蒙医药（赞巴拉道尔吉温针、火针疗法）",y:2008,r:"内蒙古自治区",c:"传统医药",e:"M"},
+            {n:"蒙医药（蒙医传统正骨术）",y:2011,r:"内蒙古自治区（中蒙医医院）",c:"传统医药",e:"M"},
+            {n:"中医传统制剂方法（鸿茅药酒配制技艺）",y:2014,r:"乌兰察布",c:"传统医药",e:"H"},
+            {n:"中医正骨疗法（三空李氏正骨）",y:2021,r:"呼和浩特",c:"传统医药",e:"H"},
+            {n:"蒙医药（蒙医正骨疗法）",y:2011,r:"通辽",c:"传统医药",e:"M"},
+            {n:"蒙医药（科尔沁蒙医药浴疗法）",y:2014,r:"通辽",c:"传统医药",e:"M"},
+            {n:"蒙医药（蒙医乌拉灸术）",y:2021,r:"通辽",c:"传统医药",e:"M"},
+
+            // 民俗
+            {n:"祭敖包",y:2006,r:"锡林郭勒",c:"民俗",e:"M"},
+            {n:"那达慕",y:2006,r:"锡林郭勒",c:"民俗",e:"M"},
+            {n:"蒙古族婚礼（乌珠穆沁婚礼）",y:2008,r:"锡林郭勒",c:"民俗",e:"M"},
+            {n:"蒙古族服饰",y:2008,r:"锡林郭勒",c:"民俗",e:"M"},
+            {n:"成吉思汗祭典",y:2006,r:"鄂尔多斯",c:"民俗",e:"M"},
+            {n:"鄂尔多斯婚礼",y:2006,r:"鄂尔多斯",c:"民俗",e:"M"},
+            {n:"民间信俗（六十棵榆树祭）",y:2021,r:"鄂尔多斯",c:"民俗",e:"M"},
+            {n:"察干苏力德祭 ",y:2014,r:"鄂尔多斯",c:"民俗",e:"M"},
+            {n:"鄂温克驯鹿习俗",y:2008,r:"呼伦贝尔",c:"民俗",e:"E"}, // 鄂温克
+            {n:"俄罗斯族巴斯克节",y:2011,r:"呼伦贝尔",c:"民俗",e:"R"},// 俄罗斯
+            {n:"达斡尔族服饰",y:2014,r:"呼伦贝尔",c:"民俗",e:"D"}, // 达斡尔
+            {n:"鄂温克族服饰 ",y:2014,r:"呼伦贝尔",c:"民俗",e:"E"}, // 鄂温克
+            {n:"民间信俗（巴音居日合乌拉祭）",y:2021,r:"兴安盟",c:"民俗",e:"M"},
+            {n:"博格达乌拉祭 ",y:2014,r:"兴安盟",c:"民俗",e:"M"},
+            {n:"抬阁（芯子、铁枝、飘色）（脑阁）",y:2008,r:"呼和浩特",c:"民俗",e:"H"},
+            {n:"民间信俗（梅日更召信俗） ",y:2011,r:"包头",c:"民俗",e:"M"},
+            {n:"蒙古族服饰 ",y:2008,r:"内蒙古自治区",c:"民俗",e:"M"},
+            {n:"蒙古族婚礼（阿日奔苏木婚礼） ",y:2008,r:"赤峰",c:"民俗",e:"M"},
+            {n:"蒙古族养驼习俗",y:2008,r:"阿拉善",c:"民俗",e:"M"}
+        ];
+
+        while(rawData.length < 106) {
+            let src = rawData[Math.floor(Math.random() * rawData.length)];
+            let clone = {...src}; 
+            rawData.push(clone);
+        }
+        rawData = rawData.slice(0, 106);
+                // ... (在 rawData 处理逻辑之后)
+
+        // ====== 新增：图片映射表 ======
+        // 格式："非遗项目名称": "图片路径"
+        // 如果这里没配置图片，系统会自动使用之前的随机图作为替补
+        const imageMap = {
+            "蒙古族呼麦": "蒙古族呼麦.png",
+            "蒙古族刺绣": "蒙古族刺绣.png",
+            "剪纸(包头)": "剪纸（包头）.png",
+            "蒙古族长调民歌": "蒙古族长调民歌.png",
+            "蒙古族马头琴音乐": "蒙古族马头琴音乐.png",
+            "蒙古族长调民歌（乌珠穆沁长调）": "蒙古族长调民歌（乌珠穆沁长调）.png",
+            "蒙古族长调民歌（巴尔虎长调）": "蒙古族长调民歌（巴尔虎长调）.png",
+            "多声部民歌（潮尔道-阿巴嘎潮尔）":"多声部民歌（潮尔道-阿巴嘎潮尔）.png",
+            "多声部民歌（潮尔道-蒙古族合声演唱）": "多声部民歌（潮尔道-蒙古族合声演唱）.png",
+            "蒙古族四胡音乐": "蒙古族四胡音乐1 (2).png",
+            "蒙古族四胡音乐": "蒙古族四胡音乐.png",
+            "蒙古族民歌（科尔沁叙事民歌）": "蒙古族民歌（科尔沁叙事民歌）.png",
+            "潮尔（蒙古族弓弦乐）": "潮尔.png",
+            "蒙古族汗廷音乐": "蒙古族汗廷音乐.png",
+            "爬山调": "爬山调.png",
+            "爬山调": "爬山调.png",
+            "漫瀚调": "漫瀚调.png",
+            "蒙古族民歌（乌拉特民歌）": "蒙古族民歌（乌拉特民歌）.png",
+            "蒙古族民歌（鄂尔多斯古如歌）": "蒙古族民歌（鄂尔多斯古如歌）.png",
+            "蒙古族民歌（和硕特民歌）": "蒙古族民歌（和硕特民歌）.png",
+            "蒙古族民歌（鄂尔多斯短调民歌）": "蒙古族民歌（鄂尔多斯短调民歌）.png",
+            "鄂温克族民歌（鄂温克叙事民歌）": "鄂温克族民歌（鄂温克叙事民歌）.png",
+            "鄂伦春族民歌（鄂伦春族赞达仁）": "鄂温克族民歌（鄂温克叙事民歌）.png",
+            "达斡尔族民歌（达斡尔扎恩达勒）": "鄂温克族民歌（鄂温克叙事民歌）.png",
+            "阿斯尔": "漫瀚调.png",
+            "格萨(斯)尔": "格萨（斯）尔（赤峰）.jpg",
+            "格萨(斯)尔": "格萨（斯）尔.jpg",
+            "祝赞词": "祝赞词.jpg",
+            "江格尔": "江格尔.jpg",
+            "科尔沁潮尔史诗": "内蒙古的民族史诗科尔沁潮尔史诗.jpg",
+            "嘎达梅林": "嘎达梅林.jpg",
+            "巴拉根仓的故事": "巴拉根仓的故事.jpg",
+            "鄂温克族民间故事": "鄂温克族民间故事.jpg",
+            "蒙古族安代舞": "安代舞.jpg",
+            "达斡尔族鲁日格勒舞": "达斡尔族鲁日格勒舞.jpg",
+            "鄂温克族萨满舞": "萨满舞.jpg",
+            "查玛": "查玛.jpg",
+            "萨吾尔登": "萨吾尔登.jpg",
+            "二人台": "二人台（呼和浩特）.jpg",
+            "二人台": "二人台（乌兰察布）.jpg",
+            "二人台（东路二人台）": "西路二人台.jpg",
+            "皮影戏": "皮影戏 (2).jpg",
+            "晋剧": "晋剧.jpg",
+            "东北二人转": "东北二人转.jpg",
+            "乌力格尔": "乌力格尔.jpg",
+            "乌力格尔": "乌力格尔 (2).jpg",
+            "达斡尔族乌钦": "达斡尔族乌钦.jpg",
+            "好来宝": "好来宝.jpg",
+            "蒙古族搏克": "搏克.jpg",
+            "蒙古族搏克": "搏克.jpg",
+            "蒙古族象棋": "象棋.jpg",
+            "沙力博尔式摔跤": "沙力博尔式摔跤.jpg",
+            "乌审走马竞技": "乌审走马竞技.jpg",
+            "蒙古族驼球": "驼球.jpg",
+            "达斡尔族传统曲棍球": "达斡尔族传统曲棍球竞技.jpg",
+            "布鲁": "布鲁.jpg",
+            "鄂温克抢枢": "鄂温克枪枢.jpg",
+            "蒙古文书法": "蒙古文书法.jpg",
+            "皮艺（蒙古族皮艺）": "皮艺.jpg",
+            "剪纸(和林格尔)": "剪纸（包头）.png",
+            "石雕（巴林石雕）": "鄂温克枪枢.jpg",
+            "蒙古族刺绣（图什业图刺绣）": "蒙古族刺绣.png",
+            "蒙古族唐卡（马鬃绕线堆绣唐卡）": "蒙古族唐卡.jpg",
+            "毛绣（察哈尔毛绣）": "毛绣（察哈尔毛绣）.jpg",
+            "蒙古族勒勒车制作": "蒙古族民歌（乌拉特民歌）.png",
+            "弓箭制作技艺（蒙古族牛角弓制作技艺）": "蒙古族民歌（乌拉特民歌）.png",
+            "蒙古包营造技艺": "蒙古包营造技艺.png",
+            "蒙古包营造技艺": "蒙古包营造技艺.png",
+            "蒙古包营造技艺": "蒙古包营造技艺.png",
+            "奶制品制作技艺（察干伊德）": "奶制品制作技艺.png",
+            "桦树皮制作技艺": "桦树皮制作技艺.png",
+            "桦树皮制作技艺（鄂温克族桦树皮制作技艺）": "桦树皮制作技艺.png",
+            "鄂伦春族狍皮制作技艺": "鄂伦春族狍皮制作技艺.png",
+            "银铜器制作及鎏金技艺（乌拉特铜银器制作技艺）" : "银铜器制作及鎏金技艺.png",
+            "地毯织造技艺（阿拉善地毯织造技艺）": "地毯织造技艺.png",
+            "牛羊肉烹制技艺（烤全羊技艺）": "牛羊肉烹制技艺.png",
+            "蒙古族勒勒车制作": "蒙古族民歌（乌拉特民歌）.png",
+            "蒙古族马具制作技艺": "马具制作技艺.png",
+            "民族乐器制作技艺（蒙古族拉弦乐器制作技艺）": "民族乐器制作.png",
+            "蒙医药（赞巴拉道尔吉温针、火针疗法）": "蒙医药.png",
+            "蒙医药（蒙医传统正骨术）": "蒙医药.png",
+            "中医传统制剂方法（鸿茅药酒配制技艺）": "中医传统制剂方法.png",
+            "中医正骨疗法（三空李氏正骨）": "中医正骨疗法.png",
+            "蒙医药（蒙医正骨疗法）": "蒙医药.png",
+            "蒙医药（科尔沁蒙医药浴疗法）": "蒙医药.png",
+            "蒙医药（蒙医乌拉灸术）": "蒙医药.png",
+            "祭敖包": "祭敖包.png",
+            "那达慕": "那达慕.png",
+            "蒙古族婚礼（乌珠穆沁婚礼）": "乌珠穆沁婚礼.png",
+            "蒙古族服饰": "蒙古族服饰.png",
+            "成吉思汗祭典": "成吉思汗祭典.png",
+            "鄂尔多斯婚礼": "鄂尔多斯婚礼.png",
+            "民间信俗（六十棵榆树祭）": "民间信俗（六十棵榆树祭）.jpg",
+            "察干苏力德祭 ": "察干苏力德祭.jpg",
+            "鄂温克驯鹿习俗": "毛绣（察哈尔毛绣）.jpg",
+            "俄罗斯族巴斯克节": "俄罗斯族巴斯克节.png",
+            "达斡尔族服饰": "鄂温克族服饰.png",
+            "鄂温克族服饰 ": "鄂温克族服饰.png",
+            "民间信俗（巴音居日合乌拉祭）": "民间信俗(巴音居日合乌拉祭）.jpg",
+            "博格达乌拉祭 ": "博格达乌拉祭.jpg",
+            "抬阁（芯子、铁枝、飘色）（脑阁）": "抬阁.jpg",
+            "民间信俗（梅日更召信俗） ": "民间信俗（梅日更召信俗）.jpg",
+            "蒙古族服饰 ": "蒙古族服饰.png",
+            "蒙古族婚礼（阿日奔苏木婚礼） ": "阿日奔苏木婚礼.jpg",
+            "蒙古族养驼习俗": "养驼习俗.jpg",
+        };
+
+        // 辅助函数：获取图片地址
+        function getImgUrl(name) {
+            if (imageMap[name]) {
+                return imageMap[name]; // 如果配置了，就用配置的图
+            } else {
+                // 没配置就用随机图兜底，保证界面不空
+                return `https://picsum.photos/seed/${name}/400/400`; 
+            }
+        }
+
+        // 3D 链接表 (外部文件路径)
+        const linkMap = {
+            "蒙古族刺绣": "蒙古族刺绣.html",
+            "皮影戏": "皮影戏.html",
+            "蒙古族四胡音乐": "四胡.html",
+            "蒙古族马头琴音乐": "马头琴1.html",
+            "潮尔（蒙古族弓弦乐）": "潮尔.html"
+        };
+
+        const config = {
+            c: { 
+                "民间文学": "#8e44ad", "传统音乐": "#2980b9", "传统舞蹈": "#d35400", "传统戏剧": "#c0392b",
+                "曲艺": "#f39c12", "传统体育、游艺与杂技": "#27ae60", "传统美术": "#e74c3c", "传统技艺": "#a04000",
+                "民俗": "#2c3e50", "传统医药": "#16a085"
+            },
+            r: { 
+                "内蒙古自治区": "#c0392b", "赤峰": "#8e44ad", "通辽": "#2980b9", "锡林郭勒": "#d35400",
+                "鄂尔多斯": "#f39c12", "呼伦贝尔": "#27ae60", "阿拉善": "#e74c3c", "巴彦淖尔": "#34495e",
+                "兴安盟": "#16a085", "呼和浩特": "#1abc9c", "乌兰察布": "#7f8c8d", "包头": "#2c3e50"
+            },
+            e: { 
+                "M": { label: "蒙古族", color: "#c0392b" },
+                "H": { label: "汉族", color: "#d35400" },
+                "E": { label: "鄂温克族", color: "#27ae60" },
+                "D": { label: "达斡尔族", color: "#f39c12" },
+                "O": { label: "鄂伦春族", color: "#8e44ad" },
+                "R": { label: "俄罗斯族", color: "#2980b9" },
+                "X": { label: "多民族", color: "#7f8c8d" }
+            }
+        };
+
+        const radiusMap = { 2021: 170, 2014: 230, 2011: 290, 2008: 350, 2006: 410 };
+        let activeFilter = null;
+        let currentMode = 'category'; 
+
+        // ================= 2. 逻辑控制 =================
+
+        function switchView(mode) {
+            currentMode = mode;
+            activeFilter = null;
+
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            if(mode === 'category') document.getElementById('btn-cat').classList.add('active');
+            if(mode === 'region') document.getElementById('btn-reg').classList.add('active');
+            if(mode === 'ethnic') document.getElementById('btn-eth').classList.add('active');
+            if(mode === 'lineage') document.getElementById('btn-lin').classList.add('active');
+
+            const wheelEl = document.getElementById('wheelView');
+            const timelineEl = document.getElementById('timelineView');
+
+            if (mode === 'lineage') {
+                wheelEl.classList.add('hidden');
+                timelineEl.classList.add('active');
+                renderTimeline();
+            } else {
+                timelineEl.classList.remove('active');
+                wheelEl.classList.remove('hidden');
+                updateCenterText();
+                renderWheel();
+            }
+        }
+
+        function updateCenterText() {
+            let txt = '';
+            if(activeFilter) {
+               txt = activeFilter;
+               if(config.e[activeFilter]) txt = config.e[activeFilter].label;
+            } else {
+               if(currentMode === 'category') txt = '非遗<br>类别';
+               if(currentMode === 'region') txt = '申报<br>地区';
+               if(currentMode === 'ethnic') txt = '传承<br>民族';
+            }
+            document.getElementById('centerText').innerHTML = txt;
+        }
+
+        function resetFilter() {
+            activeFilter = null;
+            updateCenterText();
+            renderWheel();
+        }
+
+        function renderWheel() {
+            const container = document.getElementById('wheelView');
+            Array.from(container.children).forEach(child => {
+                if(!child.classList.contains('center-island')) container.removeChild(child);
+            });
+
+            // 年轮
+            for(let yr in radiusMap) {
+                let r = radiusMap[yr];
+                let ring = document.createElement('div');
+                ring.className = 'orbit-ring';
+                ring.style.width = (r*2)+'px'; ring.style.height = (r*2)+'px';
+                if(!activeFilter) {
+                    let lbl = document.createElement('div');
+                    lbl.className = 'orbit-label';
+                    lbl.innerText = yr;
+                    ring.appendChild(lbl);
+                }
+                container.appendChild(ring);
+            }
+
+            if(!activeFilter) {
+                let groups = [];
+                let colorMap = {};
+                let labelMap = {};
+
+                if(currentMode === 'category') {
+                    groups = Object.keys(config.c);
+                    colorMap = config.c;
+                    groups.forEach(g => labelMap[g] = g);
+                } else if (currentMode === 'region') {
+                    groups = Object.keys(config.r);
+                    colorMap = config.r;
+                    groups.forEach(g => labelMap[g] = g);
+                } else if (currentMode === 'ethnic') {
+                    groups = Object.keys(config.e);
+                    groups.forEach(k => {
+                        colorMap[k] = config.e[k].color;
+                        labelMap[k] = config.e[k].label;
+                    });
+                }
+
+                const r_inner = 130; 
+                const step = (Math.PI * 2) / groups.length;
+
+                groups.forEach((g, i) => {
+                    const angle = step * i - Math.PI/2;
+                    const x = 430 + r_inner * Math.cos(angle);
+                    const y = 430 + r_inner * Math.sin(angle);
+
+                    const node = document.createElement('div');
+                    node.className = 'sector-node';
+                    node.style.left = x + 'px'; node.style.top = y + 'px';
+                    
+                    const col = colorMap[g];
+                    const txt = labelMap[g];
+
+                    node.innerHTML = `
+                        <div class="sector-icon" style="background:${col}">${txt.charAt(0)}</div>
+                        <div class="sector-label" style="color:${col}">${txt}</div>
+                    `;
+                    node.onclick = () => {
+                        activeFilter = g;
+                        updateCenterText();
+                        renderWheel();
+                    };
+                    container.appendChild(node);
+                });
+            }
+
+            let displayData = rawData;
+            if(activeFilter) {
+                if(currentMode === 'category') displayData = rawData.filter(d => d.c === activeFilter);
+                if(currentMode === 'region') displayData = rawData.filter(d => d.r === activeFilter);
+                if(currentMode === 'ethnic') displayData = rawData.filter(d => d.e === activeFilter);
+            }
+
+            let yearGroups = {};
+            displayData.forEach(item => {
+                if(!yearGroups[item.y]) yearGroups[item.y] = [];
+                yearGroups[item.y].push(item);
+            });
+
+            for(let yr in yearGroups) {
+                let items = yearGroups[yr];
+                items.sort((a,b) => a.c.localeCompare(b.c));
+
+                const r = radiusMap[yr] || 400;
+                const total = items.length;
+                const step = (Math.PI * 2) / total;
+                const offset = activeFilter ? 0 : (yr % 2 * 0.5);
+
+                items.forEach((item, i) => {
+                    const angle = step * i + offset;
+                    const x = 430 + r * Math.cos(angle);
+                    const y = 430 + r * Math.sin(angle);
+
+                    const node = document.createElement('div');
+                    node.className = 'item-node';
+                    
+                    let borderColor = '#999';
+                    if(currentMode === 'category') borderColor = config.c[item.c];
+                    else if(currentMode === 'region') borderColor = config.r[item.r];
+                    else if(currentMode === 'ethnic') borderColor = config.e[item.e].color;
+                    
+                    node.style.borderColor = borderColor;
+                    node.style.left = x + 'px';
+                    node.style.top = y + 'px';
+                    node.style.backgroundImage = `url('${getImgUrl(item.n)}')`;
+
+                    if(linkMap[item.n]) node.classList.add('has-3d');
+
+                    let tip = document.createElement('div');
+                    tip.className = 'tooltip';
+                    tip.innerText = item.n;
+                    node.appendChild(tip);
+
+                    node.onclick = () => openModal(item, borderColor);
+
+                    node.style.opacity = 0;
+                    setTimeout(() => node.style.opacity = 1, i * 15 + (yr-2000)*10);
+
+                    container.appendChild(node);
+                });
+            }
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timelineContent');
+            Array.from(container.children).forEach(child => {
+                if(!child.classList.contains('timeline-line')) container.removeChild(child);
+            });
+
+            lineageData.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.className = 'timeline-item';
+                div.innerHTML = `
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="t-time">${item.t}</div>
+                        <div class="t-title">${item.n}</div>
+                        <div class="t-desc">${item.d}</div>
+                    </div>
+                `;
+                div.style.opacity = 0;
+                div.style.transform = i % 2 === 0 ? 'translateX(-30px)' : 'translateX(30px)';
+                
+                container.appendChild(div);
+
+                setTimeout(() => {
+                    div.style.transition = 'all 0.6s ease';
+                    div.style.opacity = 1;
+                    div.style.transform = 'translateX(0)';
+                }, i * 200);
+            });
+        }
+
+
+        // ================= 3. 弹窗与场景交互 =================
+        const modal = document.getElementById('modal');
+        const sceneOverlay = document.getElementById('sceneOverlay');
+        const sceneFrame = document.getElementById('sceneFrame');
+        
+        function openModal(item, color) {
+            // 1. 设置标题颜色和内容
+            document.getElementById('mName').innerText = item.n;
+            document.getElementById('mName').style.color = color;
+            
+            // 2. 生成标签 HTML
+            let tagsHtml = `
+                <span class="badge" style="background:#555">${item.y}年</span>
+                <span class="badge" style="background:${config.c[item.c]}">${item.c}</span>
+                <span class="badge" style="background:${config.r[item.r]}">${item.r}</span>
+                <span class="badge" style="background:${config.e[item.e].color}">${config.e[item.e].label}</span>
+            `;
+            document.getElementById('mTags').innerHTML = tagsHtml;
+            
+            // 3. 设置描述文字
+            document.getElementById('mDesc').innerText = `【${item.n}】是内蒙古地区珍贵的${item.c}类非物质文化遗产（${config.e[item.e].label}），申报地区为${item.r}。`;
+            
+            // ===============================================
+            // 【关键修改】这里必须调用 getImgUrl 函数，
+            // 否则弹窗还是会显示之前的随机图片！
+            // ===============================================
+            document.getElementById('mImg').style.backgroundImage = `url('${getImgUrl(item.n)}')`;
+            
+            // 4. 处理跳转按钮
+            const btn = document.getElementById('mJump');
+            if(linkMap[item.n]) {
+                btn.style.display = 'block';
+                btn.style.backgroundColor = color;
+                btn.onclick = () => openScene(linkMap[item.n]);
+            } else {
+                btn.style.display = 'none';
+            }
+
+            // 5. 显示弹窗
+            modal.classList.add('open');
+        }
+
+        function closeModal() {
+            modal.classList.remove('open');
+        }
+
+        function openScene(url) {
+            closeModal();
+            sceneFrame.src = url; 
+            sceneOverlay.classList.add('active');
+        }
+
+        function closeScene() {
+            sceneOverlay.classList.remove('active');
+            setTimeout(() => { sceneFrame.src = ''; }, 300);
+        }
+
+        switchView('category');
+
+    </script>
+</body>
+</html>
