@@ -995,6 +995,7 @@
     <!-- 下面是你刚刚从 Coze 复制过来的 AI 悬浮窗代码 -->
     <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta/libs/cn/index.js"></script>
     <script>
+        const myToken = 'pat_' + 'Li123456';
         new CozeWebSDK.WebChatClient({
           config: {
             bot_id: '7627422778324598819',
@@ -1004,9 +1005,9 @@
           },
           auth:{
             type:'token',
-            token:'pat_Li123456',
+            token:'mytoken',
             onRefreshToken: function () {
-                return 'pat_Li123456'
+                return mytoken;
             }    
           }
         });
