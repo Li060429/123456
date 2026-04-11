@@ -993,7 +993,7 @@
 
     <!-- ============================================== -->
     <!-- 下面是你刚刚从 Coze 复制过来的 AI 悬浮窗代码 -->
-    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta/libs/cn/index.js"></script>
+    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.0.0-beta.4/libs/cn/index.js"></script>
     <script>
         const myToken = 'pat_' + '0jWfxsMVlhNAYcW8GqpLlNJqNZ3UM489hCx15ce36JTwXxphyLB96UsByiUyieSx';
         new CozeWebSDK.WebChatClient({
@@ -1005,9 +1005,9 @@
           },
           auth:{
             type:'token',
-            token:mytoken,
+            token:myToken,
             onRefreshToken: function () {
-                return mytoken;
+                return myToken;
             }    
           }
         });
