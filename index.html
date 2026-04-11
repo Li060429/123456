@@ -993,14 +993,21 @@
 
     <!-- ============================================== -->
     <!-- 下面是你刚刚从 Coze 复制过来的 AI 悬浮窗代码 -->
-    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.x.x/libs/cn/index.js"></script>
+    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta/libs/cn/index.js"></script>
     <script>
         new CozeWebSDK.WebChatClient({
           config: {
-            bot_id: '你的专属ID',
+            bot_id: '7627422778324598819',
           },
           componentProps: {
-            title: '网站智能助手',
+            title: '小薪',
+          },
+          auth:{
+            type:'token',
+            token:'pat_********',
+            onRefreshToken: function () {
+                return 'pat_********'
+            }    
           }
         });
     </script>
