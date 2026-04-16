@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -92460,50 +92461,16 @@
 
             geometry.setAttribute('position', new THREE.BufferAttribute(currentPositions, 3));
 
-            const shaderUniforms = {
-                uFactor: { value: 0.0 },
-                uAudioLevel: { value: 0.0 },
-                uTime: { value: 0.0 },
-                uColor: { value: new THREE.Color(params.color) },
-                uPointSize: { value: params.pointSize }
-            };
-
-            const particleMaterial = new THREE.ShaderMaterial({
-                uniforms: shaderUniforms,
+            const material = new THREE.PointsMaterial({
+                color: params.particleColor,
+                size: params.particleSize,
                 transparent: true,
+                opacity: 0.6, // 降低不透明度 (原0.9)
                 blending: THREE.AdditiveBlending,
-                depthWrite: false,
-                vertexShader: `
-                    attribute vec3 aTarget; 
-                    uniform float uFactor;
-                    uniform float uAudioLevel;
-                    uniform float uTime;
-                    uniform float uPointSize;
-
-                    void main() {
-                        // 在 GPU 中直接计算插值（替代 JS 的 for 循环）
-                        vec3 currentPos = mix(position, aTarget, uFactor);
-
-                        // 音乐律动：模拟马头琴弦的震动
-                        if(uFactor > 0.1) {
-                            float seed = sin(position.x * 10.0 + position.y * 10.0);
-                            currentPos += seed * uAudioLevel * uFactor * 3.0; 
-                        }
-
-                        vec4 mvPosition = modelViewMatrix * vec4(currentPos, 1.0);
-                        gl_PointSize = uPointSize * (300.0 / -mvPosition.z);
-                        gl_Position = projectionMatrix * mvPosition;
-                    }
-                `,
-                fragmentShader: `
-                    uniform vec3 uColor;
-                    void main() {
-                        float d = distance(gl_PointCoord, vec2(0.5));
-                        if(d > 0.5) discard;
-                        gl_FragColor = vec4(uColor, 1.0 - d * 2.0);
-                    }
-                `
+                sizeAttenuation: true,
+                depthWrite: false
             });
+
             particleSystem = new THREE.Points(geometry, material);
             scene.add(particleSystem);
         }
@@ -92647,33 +92614,22 @@
                 // 计算抖动幅度: factor(手势散开程度) * 音频强度
                 const vibrateScale = factor * 4.0 * normalizedAudio; 
 
-shaderUniforms.uTime.value = time;
-    shaderUniforms.uFactor.value = factor; // 这里的 factor 是你由鼠标/眼动计算出的变量
-
-                // 2. 处理音频驱动逻辑
-                if (isGalloping && analyser) {
-                    const dataArray = new Uint8Array(analyser.frequencyBinCount);
-                    analyser.getByteFrequencyData(dataArray);
-                    let sum = 0;
-                    for(let i=0; i<dataArray.length; i++) sum += dataArray[i];
-                    const audioLevel = sum / dataArray.length / 255.0; // 归一化到 0-1
+                for (let i = 0; i < positions.length; i++) {
+                    const origin = homePositions[i];
+                    const target = targetPositions[i];
                     
-                    shaderUniforms.uAudioLevel.value = audioLevel;
-                } else {
-                    shaderUniforms.uAudioLevel.value = 0.0;
-                }
+                    // 1. 基础手势插值
+                    let currentPos = origin + (target - origin) * factor;
+                    
+                    // 2. 音乐律动叠加 (只有散开时才随音乐跳动)
+                    if(isGalloping) {
+                        // 随机震动模拟“奔腾”
+                        currentPos += (Math.random() - 0.5) * vibrateScale;
+                    }
 
-                // 3. 旋转逻辑（保持原样）
-                if (!controls.autoRotate) {
-                    particleSystem.rotation.y += params.rotationSpeed;
-                } else {
-                    particleSystem.rotation.y += 0.001;
+                    positions[i] = currentPos;
                 }
-
-                // 4. 渲染（不再需要每帧更新庞大的顶点数组）
-                renderer.render(scene, camera);
-                requestAnimationFrame(render);
-            }
+                particleSystem.geometry.attributes.position.needsUpdate = true;
                 
                 // 3. 颜色/透明度随音乐变化
                 if(isGalloping) {
