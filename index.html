@@ -993,26 +993,18 @@
 
     <!-- ============================================== -->
     <!-- 下面是你刚刚从 Coze 复制过来的 AI 悬浮窗代码 -->
-    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.0.0-beta.4/libs/cn/index.js"></script>
+    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js"></script>
     <script>
-        const myToken = 'pat_' + '0jWfxsMVlhNAYcW8GqpLlNJqNZ3UM489hCx15ce36JTwXxphyLB96UsByiUyieSx';
-        new CozeWebSDK.WebChatClient({
-          config: {
-            bot_id: '7627422778324598819',
-          },
-          componentProps: {
-            title: '小薪',
-          },
-          auth:{
-            type:'token',
-            token:myToken,
-            onRefreshToken: function () {
-                return myToken;
-            }    
-          }
-        });
+    // 2. 只需要这一个初始化逻辑
+    new CozeWebSDK.WebChatClient({
+        config: {
+        bot_id: '7627422778324598819', // 确保这是你正确的 Bot ID
+        },
+        componentProps: {
+        title: '内蒙古非遗智能助理',
+        },
+    });
     </script>
-    <!-- ============================================== -->
 
 </body>
 </html>
