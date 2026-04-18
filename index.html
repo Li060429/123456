@@ -982,7 +982,7 @@
 
     <script>
     // 将您的 Token 定义好
-    const myToken = 'Li123456';
+    const mytoken = 'Li123456';
 
     new CozeWebSDK.WebChatClient({
         config: {
@@ -993,9 +993,9 @@
         },
         auth: {
         type: 'token',
-        token: myToken,
-        onRefreshToken: function () {
-            return myToken;
+        token: mytoken,
+        onRefreshtoken: function () {
+            return mytoken;
         }
         }
     });
