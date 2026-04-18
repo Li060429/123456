@@ -979,38 +979,26 @@
 
     </script>
     <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js"></script>
+
     <script>
-      new CozeWebSDK.WebChatClient({
+    // 将您的 Token 定义好
+    const myToken = 'Li123456';
+
+    new CozeWebSDK.WebChatClient({
         config: {
-          bot_id: '7627422778324598819',
+        bot_id: '147258369Li',
         },
         componentProps: {
-          title: 'Coze',
+        title: '小薪',
         },
-      });
-    </script>
-    <!-- 你网站原本的各种代码都在上面，保持不变 -->
-
-    <!-- ============================================== -->
-    <!-- 下面是你刚刚从 Coze 复制过来的 AI 悬浮窗代码 -->
-    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.0.0-beta.4/libs/cn/index.js"></script>
-    <script>
-        const myToken = 'pat_' + '0jWfxsMVlhNAYcW8GqpLlNJqNZ3UM489hCx15ce36JTwXxphyLB96UsByiUyieSx';
-        new CozeWebSDK.WebChatClient({
-                   config: {
-            bot_id: '7627422778324598819',
-          },
-          componentProps: {
-            title: '小薪',
-          },
-          auth:{
-            type:'token',
-            token:myToken,
-            onRefreshToken: function () {
-                return myToken;
-            }    
-          }
-        });
+        auth: {
+        type: 'token',
+        token: myToken,
+        onRefreshToken: function () {
+            return myToken;
+        }
+        }
+    });
     </script>
     <!-- ============================================== -->
 
