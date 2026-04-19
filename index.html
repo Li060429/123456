@@ -978,6 +978,19 @@
         switchView('category');
 
     </script>
-    
+    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js"></script>
+
+    <script>
+    new CozeWebSDK.WebChatClient({
+        config: {
+        bot_id: '7627422778324598819', // 确保这个 ID 已经在 Coze 后台发布
+        },
+        // 注意：如果后台开启了 Token 校验，这里不写 auth 就会报错
+        // 如果后台关闭了校验，这样写就可以直接运行
+        componentProps: {
+        title: '小薪',
+        },
+    });
+    </script>    
 </body>
 </html>
