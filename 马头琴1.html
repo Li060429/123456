@@ -185,19 +185,6 @@
         import { RenderPass } from 'https://unpkg.com/three@0.136.0/examples/jsm/postprocessing/RenderPass.js';
         import { UnrealBloomPass } from 'https://unpkg.com/three@0.136.0/examples/jsm/postprocessing/UnrealBloomPass.js';
 
-        // 2. 确保无论 API 是否报错，Loading 遮罩层都能正常消失
-        window.onload = function() {
-            const loadingOverlay = document.querySelector('.loading-overlay');
-            if (loadingOverlay) {
-                // 延迟一秒消失，确保 3D 场景有缓冲时间
-                setTimeout(() => {
-                    loadingOverlay.style.opacity = '0';
-                    setTimeout(() => {
-                        loadingOverlay.style.display = 'none';
-                    }, 500);
-                }, 1000);
-            }
-        };
     </script>
 
         // ================= 内置数据 (马头琴点云) =================
