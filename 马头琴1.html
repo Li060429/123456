@@ -199,11 +199,6 @@
             }
         };
 
-        // 3. 对失效的 API 进行静默处理，防止其报错阻断后续脚本
-        fetch('https://xapi.yhchj.com/version')
-            .then(res => res.json())
-            .then(data => console.log("版本信息:", data))
-            .catch(err => console.warn("API 暂时不可用，已跳过数据加载。"));
     </script>
 
         // ================= 内置数据 (马头琴点云) =================
