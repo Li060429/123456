@@ -159,7 +159,14 @@
 
     <div id="webcam-preview"><video id="webcam" autoplay playsinline muted></video></div>
     <div id="canvas-container"></div>
-
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.136.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.136.0/examples/jsm/"
+            }
+        }
+    </script>
     <script type="module">
         // 1. 更换为稳定的 CDN 地址
         import * as THREE from 'https://unpkg.com/three@0.136.0/build/three.module.js';
