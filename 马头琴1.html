@@ -3,6 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>马头琴 · 马头琴交互艺术</title>
+    <script>
+        const originalFetch = window.fetch;
+        window.fetch = function() {
+            if (arguments[0] && arguments[0].includes('yhchj.com')) {
+                console.warn('已自动拦截失效的 API 请求:', arguments[0]);
+                return Promise.resolve(new Response(JSON.stringify({ version: "1.0.0", status: "mocked" })));
+            }
+            return originalFetch.apply(this, arguments);
+        };
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;700&display=swap');
 
