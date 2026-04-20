@@ -162,14 +162,34 @@
     <div id="webcam-preview"><video id="webcam" autoplay playsinline muted></video></div>
     <div id="canvas-container"></div>
 
-    <script type="module">
-        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
-        import { OrbitControls } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js';
-        import { EffectComposer } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/postprocessing/EffectComposer.js';
-        import { RenderPass } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/postprocessing/RenderPass.js';
-        import { UnrealBloomPass } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/postprocessing/UnrealBloomPass.js';
-        import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.17.0/+esm';
-        import { FilesetResolver, HandLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
+        <script type="module">
+            // 1. 更换为稳定的 CDN 地址
+            import * as THREE from 'https://unpkg.com/three@0.136.0/build/three.module.js';
+            import { OrbitControls } from 'https://unpkg.com/three@0.136.0/examples/jsm/controls/OrbitControls.js';
+            import { EffectComposer } from 'https://unpkg.com/three@0.136.0/examples/jsm/postprocessing/EffectComposer.js';
+            import { RenderPass } from 'https://unpkg.com/three@0.136.0/examples/jsm/postprocessing/RenderPass.js';
+            import { UnrealBloomPass } from 'https://unpkg.com/three@0.136.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+
+            // 2. 确保无论 API 是否报错，Loading 遮罩层都能正常消失
+            window.onload = function() {
+                const loadingOverlay = document.querySelector('.loading-overlay');
+                if (loadingOverlay) {
+                    // 延迟一秒消失，确保 3D 场景有缓冲时间
+                    setTimeout(() => {
+                        loadingOverlay.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingOverlay.style.display = 'none';
+                        }, 500);
+                    }, 1000);
+                }
+            };
+
+            // 3. 对失效的 API 进行静默处理，防止其报错阻断后续脚本
+            fetch('https://xapi.yhchj.com/version')
+                .then(res => res.json())
+                .then(data => console.log("版本信息:", data))
+                .catch(err => console.warn("API 暂时不可用，已跳过数据加载。"));
+        </script>
 
 
         // ================= 内置数据 (马头琴点云) =================
